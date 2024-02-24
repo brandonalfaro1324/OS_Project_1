@@ -1,9 +1,8 @@
 
 #include "ram.h"
 
-// Create global ram variable
-int data_elements[SIZE] = {-1};
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////
 bool initializeRam(string sample_text){
 
     // Return success signal back to main
@@ -19,7 +18,6 @@ bool initializeRam(string sample_text){
         getDataFromFile(&new_file); 
         file_sucess = true;
     }
-
     return file_sucess;
 }
 
@@ -52,15 +50,26 @@ void getDataFromFile(ifstream *sample_file){
             }
         }
     }
+    sample_file->close();
+    sample_file = NULL;
+}
+////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////
+void RAMconnection(int write_ram_cpu, int read_cpu_ram){
+    cout << write_ram_cpu << " RAM " << read_cpu_ram <<endl; 
 }
 
-void testingRam(){
 
+
+
+void testingRam(){
     for(int i = 0; i < SIZE; i++){
         cout << data_elements[i] << endl;
     }
-
-
 }
 
 
