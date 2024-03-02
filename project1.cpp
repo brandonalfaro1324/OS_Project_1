@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
             } 
             // Parent Process
             else if (ram_process > 0) { 
-                CPUconnection(stoi(timer_set) , fd_cpu_ram[1], fd_ram_cpu[0]);
+                CPUrunning(stoi(timer_set) , fd_cpu_ram[1], fd_ram_cpu[0]);
                 //testingRegisters();
             } 
             else { 

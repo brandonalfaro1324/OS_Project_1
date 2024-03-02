@@ -24,7 +24,7 @@ struct RamDataFlags{
     char case_swtich;
 };
 
-RamDataFlags *flagkeeper = NULL;
+RamDataFlags *ram_flagtracker = NULL;
 
 void getDataFromFile(ifstream *);
 
