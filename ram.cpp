@@ -1,8 +1,16 @@
 
 #include "ram.h"
 
+// NOTE:
+// write_ram_cpu <= fd_ram_cpu[0] <= writing from RAM to CPU
+// read_cpu_ram <= fd_cpu_ram[1] <= reading from CPU to RAM
+
+void IntilizeDataFlags();
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////
+// FUNCTIONS THAT MAKE UP THE RAM
+
+// Opening file and creating "RAM"
 bool initializeRam(string sample_text){
 
     // Return success signal back to main
@@ -18,11 +26,12 @@ bool initializeRam(string sample_text){
         getDataFromFile(&new_file); 
         file_sucess = true;
     }
+
+    // return sucess of opening file
     return file_sucess;
 }
 
-
-// getDataFromFile() assigns elements from sampletxt to array
+// Collecting data from file and adding them to "RAM" indexes
 void getDataFromFile(ifstream *sample_file){
 
     // Create counter and string
@@ -50,8 +59,8 @@ void getDataFromFile(ifstream *sample_file){
             }
         }
     }
+    // Close file
     sample_file->close();
-    sample_file = NULL;
 }
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,16 +69,51 @@ void getDataFromFile(ifstream *sample_file){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////
 void RAMconnection(int write_ram_cpu, int read_cpu_ram){
-    cout << write_ram_cpu << " RAM " << read_cpu_ram <<endl; 
+
+    // Allocate "RamDataFlags" for flag's and data variables
+    IntilizeDataFlags();
+    
+    // Testing connection beetween RAM and CPU
+    //while (flagkeeper->exit_loop == false){
+
+        /* TESTIG CONNECTION */
+        read(read_cpu_ram, &(flagkeeper->exit_loop), sizeof(flagkeeper->exit_loop));
+        printf("Printing Result: %s\n", flagkeeper->exit_loop ? "TRUE" : "FALSE");
+        /* TESTIG CONNECTION */
+    //}
+
+    // Delete and set "flagkeeper" to NULL
+    delete flagkeeper;
+    flagkeeper = NULL;    
+}
+////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// HELPER FUNCTIONS
+
+//Function to examine "flagkeeper" variables
+void printDataFlags(){
+    printf("Exit Loop: %s\n", flagkeeper->exit_loop ? "True" : "False");
+    printf("Index: %i\n", flagkeeper->index_data);
+    printf("CaseSwtich: %c\n", flagkeeper->case_swtich);
 }
 
-
-
-
+// Examine RAM array
 void testingRam(){
     for(int i = 0; i < SIZE; i++){
         cout << data_elements[i] << endl;
     }
 }
 
-
+// Intilize "flagkeeper" and assign data to variables
+void IntilizeDataFlags(){
+    flagkeeper = new RamDataFlags;
+    flagkeeper->exit_loop = false;
+    flagkeeper->index_data = 0;
+    flagkeeper->case_swtich = '\0';
+}
