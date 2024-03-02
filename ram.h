@@ -15,11 +15,17 @@ using std::string;
 using std::ifstream;
 using std::ios;
 
-// Create global ram variable
+// Create global ram variable and assign every element to 0
 int data_elements[SIZE] = {0};
 
-//bool initializeRam(string);
+struct RamDataFlags{
+    bool exit_loop;
+    int index_data;
+    char case_swtich;
+};
+
+RamDataFlags *flagkeeper = NULL;
+
 void getDataFromFile(ifstream *);
-//void testingRam();
 
 #endif /* RAM_H */
