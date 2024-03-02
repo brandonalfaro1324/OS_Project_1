@@ -36,11 +36,14 @@ void CPUrunning(int maxtime, int write_cpu_ram, int read_ram_cpu){
         computeInstruction();        
     }
 
-    // Delete and set NULL to registers
+    // Delete and set NULL to allocated data
     delete registers;
     delete cpu_flagtracker;
+    delete data_saves;
+
     registers = NULL;
     cpu_flagtracker = NULL;
+    data_saves = NULL;
 }
 
 
@@ -48,12 +51,12 @@ void CPUrunning(int maxtime, int write_cpu_ram, int read_ram_cpu){
 int gatherData(int current_index){
 
     // Instruct read case in RAM and send current PC
-    write(cpu_flagtracker->W_CPU_RAM, "r", sizeof(char));
-    write(cpu_flagtracker->W_CPU_RAM, &(current_index), sizeof(current_index));
+    write(data_saves->W_CPU_RAM, "r", sizeof(char));
+    write(data_saves->W_CPU_RAM, &(current_index), sizeof(current_index));
 
     // Read data from RAM and return result
     int return_result;
-    read(cpu_flagtracker->R_RAM_CPU, &(return_result), sizeof(return_result));
+    read(data_saves->R_RAM_CPU, &(return_result), sizeof(return_result));
 
     // Return the data back to any register that needs it
     return return_result;
@@ -64,13 +67,13 @@ int gatherData(int current_index){
 void writeData(int index_, int data_){
 
     // Instruct write case to RAM
-    write(cpu_flagtracker->W_CPU_RAM, "w", sizeof(char));
+    write(data_saves->W_CPU_RAM, "w", sizeof(char));
 
     // Send index to the location of array we want to write
-    write(cpu_flagtracker->W_CPU_RAM, &(index_), sizeof(index_));
+    write(data_saves->W_CPU_RAM, &(index_), sizeof(index_));
 
     // Send data we want to store in index of array
-    write(cpu_flagtracker->W_CPU_RAM, &(data_), sizeof(data_));
+    write(data_saves->W_CPU_RAM, &(data_), sizeof(data_));
 }
 
 
@@ -113,14 +116,13 @@ void computeInstruction(){
       
         case 6: 
             testingRegisters(registers->IR);
-            registers->AC = gatherData(registers->SP + registers->Y);
+            registers->AC = gatherData(registers->SP + registers->X);
         break;
              
         case 7: 
             testingRegisters(registers->IR);
             writeData(gatherData(registers->PC++), registers->AC);    
         break;
-
         
         case 8: 
             testingRegisters(registers->IR);
@@ -129,12 +131,12 @@ void computeInstruction(){
         
         case 9: 
             testingRegisters(registers->IR);
-            cpu_flagtracker->TEMP_DATA = gatherData(registers->PC++);
-            if(cpu_flagtracker->TEMP_DATA == 1){
+            data_saves->TEMP_DATA = gatherData(registers->PC++);
+            if(data_saves->TEMP_DATA == 1){
                 printf("%i", registers->AC);
             }
-            else if (cpu_flagtracker->TEMP_DATA == 2) {
-                printf("%c",registers->AC);
+            else if (data_saves->TEMP_DATA == 2) {
+                printf("%c",(char)registers->AC);
             }
         break;
 
@@ -195,25 +197,25 @@ void computeInstruction(){
 
         case 21: 
             testingRegisters(registers->IR);
-            cpu_flagtracker->TEMP_DATA = gatherData(registers->PC++);
+            data_saves->TEMP_DATA = gatherData(registers->PC++);
             if(registers->AC == 0){
-                registers->PC = cpu_flagtracker->TEMP_DATA;
+                registers->PC = data_saves->TEMP_DATA;
             }
         break;
 
         case 22: 
             testingRegisters(registers->IR);
-            cpu_flagtracker->TEMP_DATA = gatherData(registers->PC++);
+            data_saves->TEMP_DATA = gatherData(registers->PC++);
             if(registers->AC != 0){
-                registers->PC = cpu_flagtracker->TEMP_DATA;
+                registers->PC = data_saves->TEMP_DATA;
             }
         break;
 
         case 23: 
             testingRegisters(registers->IR);
-            cpu_flagtracker->TEMP_DATA = gatherData(registers->PC++);
+            data_saves->TEMP_DATA = gatherData(registers->PC++);
             writeData(--registers->SP,registers->PC);
-            registers->PC = cpu_flagtracker->TEMP_DATA;
+            registers->PC = data_saves->TEMP_DATA;
         break;
 
         case 24: 
@@ -259,9 +261,9 @@ void computeInstruction(){
         case 50: 
             testingRegisters(registers->IR);
             cpu_flagtracker->CPU_EXIT = true;
-            write(cpu_flagtracker->W_CPU_RAM, 
-                &(cpu_flagtracker->END_RAM), 
-                sizeof(cpu_flagtracker->END_RAM));
+            write(data_saves->W_CPU_RAM, 
+                &(data_saves->END_RAM), 
+                sizeof(data_saves->END_RAM));
         break;
         
         // If error occurs, end program
@@ -272,8 +274,6 @@ void computeInstruction(){
 }
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 
@@ -293,7 +293,7 @@ void testingRegisters(int instruction_set){
         registers->X,
         registers->Y);
 
-        printf("\nTEMPORARY DATA: %i\n\n", cpu_flagtracker->TEMP_DATA);
+        printf("\nTEMPORARY DATA: %i\n\n", data_saves->TEMP_DATA);
 
     }
 }
@@ -316,9 +316,16 @@ void allocateRegisters(int maxtime, int write_cpu_ram, int read_ram_cpu){
     
     cpu_flagtracker->CURRENT_TIME = 0;
     cpu_flagtracker->MAXTIME = maxtime;
+
     cpu_flagtracker->CPU_EXIT = false;
-    cpu_flagtracker->W_CPU_RAM = write_cpu_ram;
-    cpu_flagtracker->R_RAM_CPU = read_ram_cpu;
-    cpu_flagtracker->TEMP_DATA = 0;
-    cpu_flagtracker->END_RAM = 'e';
+
+    // Allocate important data to save
+    data_saves = new DataSaves;
+
+    data_saves->W_CPU_RAM = write_cpu_ram;
+    data_saves->R_RAM_CPU = read_ram_cpu;
+    data_saves->TEMP_DATA = 0;
+    data_saves->END_RAM = 'e';
+
 }
+
