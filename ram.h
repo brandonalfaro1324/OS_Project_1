@@ -22,6 +22,9 @@ struct RamDataFlags{
     bool exit_loop;
     int index_data;
     char case_swtich;
+    int data_variable;
+    int W_RAM_TO_CPU;
+    int R_CPU_TO_RAM;
 };
 
 RamDataFlags *ram_flagtracker = NULL;

@@ -1,10 +1,23 @@
 #ifndef CPU_H
 #define CPU_H
 
-#include <string>    /* C++ string */
-#include <cstring>   /* C string */
-#include <iostream>  /* cout, endl */
-#include <unistd.h>     // POSIX operating system calls
+/*
+#include <string>    // C++ string 
+#include <cstring>   // C string 
+#include <iostream>  // cout, endl
+#include <unistd.h>  // POSIX operating system calls
+*/
+
+#include <stdio.h>
+#include <cstdlib>
+#include <unistd.h>
+#include <string.h>
+#include <iostream>
+#include <string>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <ctype.h>
 
 using std::cout;
 using std::endl;
@@ -29,6 +42,8 @@ struct CpuDataFlags{
 
     int W_CPU_RAM;     // Save write pipe from CPU to RAM
     int R_RAM_CPU;     // Save read pipe from RAM to CPU
+    int TEMP_DATA;
+    char END_RAM;
 };
 
 
