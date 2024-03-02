@@ -38,13 +38,15 @@ int main(int argc, char* argv[]) {
 
             pid_t ram_process = fork(); 
     
+            // Child process
             if (ram_process == 0) { 
-                //RAMconnection(fd_ram_cpu[1], fd_cpu_ram[0]);
+                RAMconnection(fd_ram_cpu[1], fd_cpu_ram[0]);
+
             } 
+            // Parent Process
             else if (ram_process > 0) { 
-                //wait(nullptr); 
                 CPUconnection(stoi(timer_set) , fd_cpu_ram[1], fd_ram_cpu[0]);
-                testingRegisters();
+                //testingRegisters();
             } 
             else { 
                 cout << "ERROR CREATING CHILD, ENDING APPLICATION..." << endl;
