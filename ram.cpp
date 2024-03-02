@@ -73,18 +73,39 @@ void RAMconnection(int write_ram_cpu, int read_cpu_ram){
     // Allocate "RamDataFlags" for flag's and data variables
     IntilizeDataFlags();
     
+    // Read from CPU before going in while loop
+    read(read_cpu_ram, &(ram_flagtracker->case_swtich), sizeof(ram_flagtracker->case_swtich));
+
     // Testing connection beetween RAM and CPU
-    //while (flagkeeper->exit_loop == false){
+    while (ram_flagtracker->exit_loop == false){
 
-        /* TESTIG CONNECTION */
-        read(read_cpu_ram, &(flagkeeper->exit_loop), sizeof(flagkeeper->exit_loop));
-        printf("Printing Result: %s\n", flagkeeper->exit_loop ? "TRUE" : "FALSE");
-        /* TESTIG CONNECTION */
-    //}
+        switch (ram_flagtracker->case_swtich){
+            case 'e':
+                printf("EXITING RAM...\n");
+                // Exit the loop
+                ram_flagtracker->exit_loop = true;
+            break;
+            case 'r':
+                printf("READ INSTRUCTION FROM CPU...\n");
+                int read_pc;
+                read(read_cpu_ram, &read_pc, sizeof(read_pc));
+                write(write_ram_cpu, &(data_elements[read_pc]), sizeof(data_elements[read_pc]));
 
-    // Delete and set "flagkeeper" to NULL
-    delete flagkeeper;
-    flagkeeper = NULL;    
+            break;
+            case 'w':
+                printf("WRITING IN RAM...\n");
+            break;
+
+        }
+        // Read next instruction from CPU
+        read(read_cpu_ram, &(ram_flagtracker->case_swtich), sizeof(ram_flagtracker->case_swtich));
+    }
+
+    // Delete and set "ram_flagtracker" to NULL
+    delete ram_flagtracker;
+    ram_flagtracker = NULL;   
+
+    exit(0);
 }
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,11 +117,11 @@ void RAMconnection(int write_ram_cpu, int read_cpu_ram){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPER FUNCTIONS
 
-//Function to examine "flagkeeper" variables
+//Function to examine "ram_flagtracker" variables
 void printDataFlags(){
-    printf("Exit Loop: %s\n", flagkeeper->exit_loop ? "True" : "False");
-    printf("Index: %i\n", flagkeeper->index_data);
-    printf("CaseSwtich: %c\n", flagkeeper->case_swtich);
+    printf("Exit Loop: %s\n", ram_flagtracker->exit_loop ? "True" : "False");
+    printf("Index: %i\n", ram_flagtracker->index_data);
+    printf("CaseSwtich: %c\n", ram_flagtracker->case_swtich);
 }
 
 // Examine RAM array
@@ -110,10 +131,11 @@ void testingRam(){
     }
 }
 
-// Intilize "flagkeeper" and assign data to variables
+// Intilize "ram_flagtracker" and assign data to variables
 void IntilizeDataFlags(){
-    flagkeeper = new RamDataFlags;
-    flagkeeper->exit_loop = false;
-    flagkeeper->index_data = 0;
-    flagkeeper->case_swtich = '\0';
+    ram_flagtracker = new RamDataFlags;
+    
+    ram_flagtracker->exit_loop = false;
+    ram_flagtracker->index_data = 0;
+    ram_flagtracker->case_swtich = '\0';
 }
