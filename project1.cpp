@@ -1,22 +1,11 @@
+
+#include <stdio.h>      // printf use
 #include <iostream>     // Get cout, endl
 #include <unistd.h>     // POSIX operating system calls
-#include <cctype>       // Transform Individual Characters
-#include <cstdio>       // Input and Output files
-// #include <cstdlib>
-#include <string>    
-
-
 
 // Include files created for this project
 #include "cpu.cpp"
 #include "ram.cpp"
-
-#define SUCCESS 0
-
-using std::cout;
-using std::endl;
-using std::string;
-
 
 int main(int argc, char* argv[]) { 
 
@@ -42,18 +31,30 @@ int main(int argc, char* argv[]) {
             if (ram_process == 0) { 
                 RAMconnection(fd_ram_cpu[1], fd_cpu_ram[0]);
 
+                // Close pipes and exit
+                
+                close(fd_ram_cpu[1]);
+                close(fd_cpu_ram[0]);
+
+                exit(0);
             } 
             // Parent Process
             else if (ram_process > 0) { 
                 CPUrunning(stoi(timer_set) , fd_cpu_ram[1], fd_ram_cpu[0]);
-                //testingRegisters();
-            } 
+                
+                // Close pipes and exit
+                close(fd_cpu_ram[1]);
+                close(fd_ram_cpu[0]);
+
+                exit(0);       
+            }     
+            // Error creating child process
             else { 
-                cout << "ERROR CREATING CHILD, ENDING APPLICATION..." << endl;
+                // Print error and exit process
+                printf("ERROR CREATING CHILD, ENDING APPLICATION...");
+                exit(-1);
             } 
         }
     }
-    
-
     return 0;
 }
