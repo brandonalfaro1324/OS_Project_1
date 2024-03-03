@@ -11,6 +11,13 @@ int gatherData(int);
 void testingRegisters(int);
 void computeInstruction();
 void writeData(int, int);
+void checkTimeout();
+
+
+const int USER = 0;
+const int KERNEL =  1;
+const int SYTEM_STACK_SIZE = 2000;
+const int INT_INSTRUCTION = 1500;
 
 
 int PRINT_DATA = 0;
@@ -34,6 +41,12 @@ void CPUrunning(int maxtime, int write_cpu_ram, int read_ram_cpu){
 
         // With the newly aquired IR, compute case instruction
         computeInstruction();        
+
+        // Increment timer by 1
+        cpu_flagtracker->CURRENT_TIME++;
+
+        // Check if we are over the timer limit
+        checkTimeout();
     }
 
     // Delete and set NULL to allocated data
@@ -63,7 +76,7 @@ int gatherData(int current_index){
 }
 
 
-// Function wries data to RAM 
+// Function writes data to RAM 
 void writeData(int index_, int data_){
 
     // Instruct write case to RAM
@@ -77,6 +90,32 @@ void writeData(int index_, int data_){
 }
 
 
+// When Timer goes over the limit, function will save everything and swith to KERNEL
+void checkTimeout(){
+
+    // Check if current timer is over the limit and user/kernel mode is set to USER
+    if(cpu_flagtracker->MAXTIME <= cpu_flagtracker->CURRENT_TIME && 
+        cpu_flagtracker->U_K_MODE == USER)
+    {
+        
+        // Reduce timer  by max time and set user/kernel to KERNEL mode
+        cpu_flagtracker->CURRENT_TIME-= cpu_flagtracker->MAXTIME;
+        cpu_flagtracker->U_K_MODE = KERNEL;
+
+        // Temporary save SP and replace SP to Size of System, 2000
+        data_saves->TEMP_DATA = registers->SP;
+        registers->SP = SYTEM_STACK_SIZE;
+
+        // Write Temporary Data to RAM follow by PC
+        writeData(--registers->SP,  data_saves->TEMP_DATA);   
+        writeData(--registers->SP,  registers->PC); 
+
+        // Set PC to 1000
+        registers->PC = 1000;
+    }
+}
+
+
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -86,49 +125,63 @@ void writeData(int index_, int data_){
 // This function carries different specific instructions that the IR needs to carry
 void computeInstruction(){
 
-
     switch(registers->IR){
 
+        // Load data to AC
         case 1: 
             testingRegisters(registers->IR);
             registers->AC = gatherData(registers->PC++);
         break;
 
+        // Load data follow by another load 
+        // from that data and store it to AC
         case 2: 
             testingRegisters(registers->IR);
             registers->AC = gatherData(gatherData(registers->PC++));
         break;
-
+        
+        // Load data from another load then another
+        // another and store it to AC
         case 3: 
             testingRegisters(registers->IR);
             registers->AC = gatherData(gatherData(gatherData(registers->PC++)));
         break;
 
+        // Load value from, using (PC + X)
+        //  and set it to AC
         case 4: 
             testingRegisters(registers->IR);
             registers->AC = gatherData(gatherData(registers->PC++) + registers->X);
         break;
         
+        // Load value from, using (PC + Y)
+        // and  set it to AC
         case 5: 
             testingRegisters(registers->IR);
             registers->AC = gatherData(gatherData(registers->PC++) + registers->Y);
         break;
       
+        // Load value from, using (SP + X) 
+        // and set it to to AC
         case 6: 
             testingRegisters(registers->IR);
             registers->AC = gatherData(registers->SP + registers->X);
         break;
              
+        // Store AC value to PC address
         case 7: 
             testingRegisters(registers->IR);
             writeData(gatherData(registers->PC++), registers->AC);    
         break;
         
+        // Get random data and store it to AC
         case 8: 
             testingRegisters(registers->IR);
             registers->AC = rand() % 100 + 1;
         break;
         
+        // Get data and if print AC depedning 
+        // of data collected from memory
         case 9: 
             testingRegisters(registers->IR);
             data_saves->TEMP_DATA = gatherData(registers->PC++);
@@ -140,61 +193,74 @@ void computeInstruction(){
             }
         break;
 
+        // Add X to AC
         case 10: 
             testingRegisters(registers->IR);
             registers->AC += registers->X;
         break;
         
+        // Add Y to AC
         case 11:           
             testingRegisters(registers->IR);
             registers->AC += registers->Y;
         break;
 
+        // Subtract X to AC
         case 12: 
             testingRegisters(registers->IR);
             registers->AC -= registers->X;
         break;
 
+        // Subtract Y to AC
         case 13: 
             testingRegisters(registers->IR);
             registers->AC -= registers->Y;
         break;
 
+        // Assign AC to X
         case 14: 
             testingRegisters(registers->IR);
             registers->X = registers->AC;
         break;
 
+        // Assign X to AC
         case 15: 
             testingRegisters(registers->IR);
             registers->AC = registers->X;
         break;
 
+        // Assign AC to Y
         case 16: 
             testingRegisters(registers->IR);
             registers->Y = registers->AC;
         break;
 
+        // Assign Y to AC
         case 17: 
             testingRegisters(registers->IR);
             registers->AC = registers->Y;
         break;
 
+        // Assign SP to AC
         case 18: 
             testingRegisters(registers->IR);
             registers->SP = registers->AC;
         break;  
 
+        // Assign AC to SP
         case 19: 
             testingRegisters(registers->IR);
             registers->AC = registers->SP;
         break;
 
+        // Jump to address
         case 20: 
             testingRegisters(registers->IR);
             registers->PC = gatherData(registers->PC++);
         break;
 
+        // Jump address if data retrieve 
+        // is equal to 0
         case 21: 
             testingRegisters(registers->IR);
             data_saves->TEMP_DATA = gatherData(registers->PC++);
@@ -203,6 +269,8 @@ void computeInstruction(){
             }
         break;
 
+        // Jump address if data retrieve 
+        // is NOT equal to 0
         case 22: 
             testingRegisters(registers->IR);
             data_saves->TEMP_DATA = gatherData(registers->PC++);
@@ -211,6 +279,8 @@ void computeInstruction(){
             }
         break;
 
+        // Push return address to SC
+        // and jump to address
         case 23: 
             testingRegisters(registers->IR);
             data_saves->TEMP_DATA = gatherData(registers->PC++);
@@ -218,49 +288,80 @@ void computeInstruction(){
             registers->PC = data_saves->TEMP_DATA;
         break;
 
+        // Pop return address from SP and jump to 
+        // the address
         case 24: 
             testingRegisters(registers->IR);
             registers->PC = gatherData(registers->SP);
             writeData(registers->SP++, 0);
         break;
 
+        // Increase X by 1
         case 25: 
             testingRegisters(registers->IR);
             registers->X++;
 
         break;
 
+        // Decrease X by 1
         case 26: 
             testingRegisters(registers->IR);
             registers->X--;
         break;
 
+        // Push AC to SP
         case 27: 
             testingRegisters(registers->IR);
             writeData(--registers->SP, registers->AC);            
         break;
 
+        // Pop SP and assign data to AC
         case 28: 
             testingRegisters(registers->IR);
             registers->AC = gatherData(registers->SP);
             registers->SP++;
         break;
 
-
-        // In progress...
-        /*
+        // Computer System Call
         case 29: 
-            cout << "Instruction 29" << endl;
-        break;
+            testingRegisters(registers->IR);
+            // Check if User/Kernel mode is User Mode 
+            if(cpu_flagtracker->U_K_MODE == USER){
 
+                // Change Mode to Kernel
+                cpu_flagtracker->U_K_MODE = KERNEL;
+
+                // Temporary save SP  and set it to Stack Size
+                data_saves->TEMP_DATA = registers->SP;
+                registers->SP = SYTEM_STACK_SIZE;
+
+                // Write Temporary Data to RAM follow by PC
+                writeData(--registers->SP,  data_saves->TEMP_DATA);   
+                writeData(--registers->SP,  registers->PC);   
+
+                // Assign PC to 1500, the instruction point
+                registers->PC = INT_INSTRUCTION;
+            }
+        break;
+        
+        // Return back to USER mode from System Call
         case 30: 
-            cout << "Instruction 30" << endl;
-        break;
-        */
+            testingRegisters(registers->IR);
+            // Collect data from SP follow by the PC 
+            registers->PC = gatherData(registers->SP++);
+            registers->SP = gatherData(registers->SP);
 
+            // Change user/kernel mode to USER
+            cpu_flagtracker->U_K_MODE = USER;
+        break;
+        
+        // End CPU
         case 50: 
             testingRegisters(registers->IR);
+            // Set "CPU_EXIT" to end while loop
             cpu_flagtracker->CPU_EXIT = true;
+            
+            // Write to RAM to end RAM process
             write(data_saves->W_CPU_RAM, 
                 &(data_saves->END_RAM), 
                 sizeof(data_saves->END_RAM));
@@ -294,7 +395,6 @@ void testingRegisters(int instruction_set){
         registers->Y);
 
         printf("\nTEMPORARY DATA: %i\n\n", data_saves->TEMP_DATA);
-
     }
 }
 
@@ -317,6 +417,8 @@ void allocateRegisters(int maxtime, int write_cpu_ram, int read_ram_cpu){
     cpu_flagtracker->CURRENT_TIME = 0;
     cpu_flagtracker->MAXTIME = maxtime;
 
+    cpu_flagtracker->U_K_MODE = USER;
+
     cpu_flagtracker->CPU_EXIT = false;
 
     // Allocate important data to save
@@ -324,8 +426,11 @@ void allocateRegisters(int maxtime, int write_cpu_ram, int read_ram_cpu){
 
     data_saves->W_CPU_RAM = write_cpu_ram;
     data_saves->R_RAM_CPU = read_ram_cpu;
+
+    data_saves->USER = USER;
+    data_saves->KERNEL = KERNEL;
+    data_saves->STACK_SIZE = SYTEM_STACK_SIZE;
+
     data_saves->TEMP_DATA = 0;
     data_saves->END_RAM = 'e';
-
 }
-
