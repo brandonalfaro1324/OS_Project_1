@@ -5,22 +5,25 @@
 // write_cpu_ram <= fd_cpu_ram[0] <= writing from CPU to RAM
 // read_ram_cpu <= fd_ram_cpu[1] <= reading from RAM to CPU
 
-void allocateRegisters(int, int, int);
-int gatherData(int);
+// Helper functions
+void testingRegisters(int);     // Print registers 
 
-void testingRegisters(int);
-void computeInstruction();
-void writeData(int, int);
-void checkTimeout();
+// Functions needed for this CPU to work
+void allocateRegisters(int, int, int);  // Allocate register struct
+int gatherData(int);            // Get data from RAM
+void writeData(int, int);       // Send data to RAM
+void computeInstruction();      // Compute Instructions
+void checkTimeout();            // Check timer
+void parentProcessError();      // Computer error function
 
 
+// Global varibales 
 const int USER = 0;
 const int KERNEL =  1;
 const int SYTEM_STACK_SIZE = 2000;
 const int INT_INSTRUCTION = 1500;
 
-
-int PRINT_DATA = 0;
+const int PRINT_DATA = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS THAT MAKE UP THE CPU
@@ -57,6 +60,44 @@ void CPUrunning(int maxtime, int write_cpu_ram, int read_ram_cpu){
     registers = NULL;
     cpu_flagtracker = NULL;
     data_saves = NULL;
+}
+
+
+// Intilize "registers" and set data to each register
+void allocateRegisters(int maxtime, int write_cpu_ram, int read_ram_cpu){
+
+    // Allocating registers and setting correct values to registers
+    registers = new Registers;
+
+    registers->PC = 0;
+    registers->SP = 1000;
+    registers->IR = 0;
+    registers->AC = 0;
+    registers->X = 0;
+    registers->Y = 0;
+
+    // Allocating flags and variables
+    cpu_flagtracker = new CpuDataFlags;
+    
+    cpu_flagtracker->CURRENT_TIME = 0;
+    cpu_flagtracker->MAXTIME = maxtime;
+
+    cpu_flagtracker->U_K_MODE = USER;
+
+    cpu_flagtracker->CPU_EXIT = false;
+
+    // Allocate important data to save
+    data_saves = new DataSaves;
+
+    data_saves->W_CPU_RAM = write_cpu_ram;
+    data_saves->R_RAM_CPU = read_ram_cpu;
+
+    data_saves->USER = USER;
+    data_saves->KERNEL = KERNEL;
+    data_saves->STACK_SIZE = SYTEM_STACK_SIZE;
+
+    data_saves->TEMP_DATA = 0;
+    data_saves->END_RAM = 'e';
 }
 
 
@@ -116,8 +157,32 @@ void checkTimeout(){
 }
 
 
+// This function will send message to child to terminate before self terminating
+void parentProcessError(){
+
+    // Print error message
+    printf("ERROR, INVALID CASE IN CHILD PROCESS...\n");
+    
+    // Send signal to RAM to terminate
+    char error_send = 'e';
+    write(data_saves->W_CPU_RAM, &error_send, sizeof(error_send));
+
+    // De-allocate variables
+    delete registers;
+    delete cpu_flagtracker;
+    delete data_saves;
+
+    registers = NULL;
+    cpu_flagtracker = NULL;
+    data_saves = NULL;
+
+    // Exit parent process
+    exit(-1);
+}
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CPU INSTRUCTIONS
@@ -369,7 +434,7 @@ void computeInstruction(){
         
         // If error occurs, end program
         default: 
-            cout << "ERROR" << endl;
+            parentProcessError();
         break;
     }
 }
@@ -381,7 +446,7 @@ void computeInstruction(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPER FUNCTIONS
 
-// Examine data for "registers"
+// Examine data in "registers"
 void testingRegisters(int instruction_set){
     if(PRINT_DATA == 1){
         printf("INSTRUCTION: %i",instruction_set);
@@ -396,41 +461,4 @@ void testingRegisters(int instruction_set){
 
         printf("\nTEMPORARY DATA: %i\n\n", data_saves->TEMP_DATA);
     }
-}
-
-// Intilize "registers" and set data to each register
-void allocateRegisters(int maxtime, int write_cpu_ram, int read_ram_cpu){
-
-    // Allocating registers and setting correct values to registers
-    registers = new Registers;
-
-    registers->PC = 0;
-    registers->SP = 1000;
-    registers->IR = 0;
-    registers->AC = 0;
-    registers->X = 0;
-    registers->Y = 0;
-
-    // Allocating flags and variables
-    cpu_flagtracker = new CpuDataFlags;
-    
-    cpu_flagtracker->CURRENT_TIME = 0;
-    cpu_flagtracker->MAXTIME = maxtime;
-
-    cpu_flagtracker->U_K_MODE = USER;
-
-    cpu_flagtracker->CPU_EXIT = false;
-
-    // Allocate important data to save
-    data_saves = new DataSaves;
-
-    data_saves->W_CPU_RAM = write_cpu_ram;
-    data_saves->R_RAM_CPU = read_ram_cpu;
-
-    data_saves->USER = USER;
-    data_saves->KERNEL = KERNEL;
-    data_saves->STACK_SIZE = SYTEM_STACK_SIZE;
-
-    data_saves->TEMP_DATA = 0;
-    data_saves->END_RAM = 'e';
 }

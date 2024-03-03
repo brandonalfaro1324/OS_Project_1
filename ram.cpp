@@ -5,9 +5,11 @@
 // write_ram_cpu <= fd_ram_cpu[0] <= writing from RAM to CPU
 // read_cpu_ram <= fd_cpu_ram[1] <= reading from CPU to RAM
 
-void IntilizeDataFlags(int, int);
-void readData();
-void writeData();
+void getDataFromFile(ifstream *);  // Get data from a file
+void IntilizeDataFlags(int, int);  // Intilize variables
+void readData();                   // Read from CPU
+void writeData();                  // Write to CPU
+void childProcessError();          // Exit process
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS THAT MAKE UP THE RAM
@@ -33,6 +35,7 @@ bool initializeRam(string sample_text){
     return file_sucess;
 }
 
+
 // Collecting data from file and adding them to "RAM" indexes
 void getDataFromFile(ifstream *sample_file){
 
@@ -51,7 +54,7 @@ void getDataFromFile(ifstream *sample_file){
             if(isdigit(string_element[0])==true){
                 data_elements[index++] = stoi(string_element);
             }
-            
+
             // If first character is '.',  
             // then change location of ram
             else if(string_element[0] == '.'){
@@ -70,7 +73,7 @@ void getDataFromFile(ifstream *sample_file){
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////
+// Code that does the magic, reading and writing to/from CPU
 void RAMconnection(int write_ram_cpu, int read_cpu_ram){
 
     // Allocate "RamDataFlags" for flag's and data variables
@@ -85,7 +88,6 @@ void RAMconnection(int write_ram_cpu, int read_cpu_ram){
 
         switch (ram_flagtracker->case_swtich){
             case 'e':
-                //printf("EXITING RAM...\n");
                 // Exit the loop
                 ram_flagtracker->exit_loop = true;
             break;
@@ -97,9 +99,9 @@ void RAMconnection(int write_ram_cpu, int read_cpu_ram){
                 // Call function to compute write work in RAM
                 writeData();
             break;
-
             default:
-                printf("ERROR...\n");
+                // Call error function to exit process
+                childProcessError();
             break;
         }
 
@@ -132,6 +134,7 @@ void readData(){
         sizeof(data_elements[ram_flagtracker->index_data]));
 }
 
+
 // This function writes data to specific lcoation in RAM
 void writeData(){
 
@@ -150,6 +153,30 @@ void writeData(){
 }
 
 
+// This function activates in the event of an read error
+void childProcessError(){
+    // Print error message and de-allocate 
+    // "ram_flagtracker" then exit with exit(-1)
+    printf("ERROR, INVALID CASE IN CHILD PROCESS...\n");
+
+    delete ram_flagtracker;
+    ram_flagtracker = NULL;  
+    
+    exit(-1);
+}
+
+
+// Intilize "ram_flagtracker" and assign data to variables
+void IntilizeDataFlags(int write_ram_cpu, int read_cpu_ram){
+    ram_flagtracker = new RamDataFlags;
+    
+    ram_flagtracker->exit_loop = false;
+    ram_flagtracker->index_data = 0;
+    ram_flagtracker->data_variable = 0;
+    ram_flagtracker->case_swtich = '\0';
+    ram_flagtracker->W_RAM_TO_CPU = write_ram_cpu;
+    ram_flagtracker->R_CPU_TO_RAM = read_cpu_ram;
+}
 ///////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -169,20 +196,8 @@ void printDataFlags(){
 // Examine RAM array
 void testingRam(){
     for(int i = 0; i < SIZE; i++){
-        cout << data_elements[i] << endl;
+        printf("%i", data_elements[i]);
     }
-}
-
-// Intilize "ram_flagtracker" and assign data to variables
-void IntilizeDataFlags(int write_ram_cpu, int read_cpu_ram){
-    ram_flagtracker = new RamDataFlags;
-    
-    ram_flagtracker->exit_loop = false;
-    ram_flagtracker->index_data = 0;
-    ram_flagtracker->data_variable = 0;
-    ram_flagtracker->case_swtich = '\0';
-    ram_flagtracker->W_RAM_TO_CPU = write_ram_cpu;
-    ram_flagtracker->R_CPU_TO_RAM = read_cpu_ram;
 }
 // HELPER FUNCTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
