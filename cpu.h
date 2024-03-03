@@ -23,8 +23,6 @@ using std::cout;
 using std::endl;
 using std::string;
 
-#define TIMER_ADDRESS 1000;
-
 // Create registers in a struct
 struct Registers {
     int PC;
@@ -39,6 +37,8 @@ struct CpuDataFlags{
     int CURRENT_TIME;  // Track CPU iterations
     int MAXTIME;       // Max iterations
 
+    int U_K_MODE;
+
     bool CPU_EXIT;     // Keep CPU while loop running  
 };
 
@@ -48,6 +48,11 @@ struct CpuDataFlags{
     
     int TEMP_DATA;     // Tempoary hold data
     char END_RAM;      // Save 'e' to end RAM
+
+    int USER;
+    int KERNEL;
+
+    int STACK_SIZE;
  };
 
 
