@@ -1,17 +1,14 @@
 #ifndef RAM_H
 #define RAM_H
 
-#include <fstream>  /* get Input/Output files */
-#include <string>   /* string */
-#include <iostream> /* cout, endl */
-#include <unistd.h>     // POSIX operating system calls
+#include <stdio.h>   // For printf
+#include <fstream>   // For getting Input/Output files
+#include <cstdlib>   // For exit() function
+#include <unistd.h>  // For POSIX operating system calls
 
 #define SIZE 2000
 
-using std::cout;
-using std::endl;
 using std::string;
-
 using std::ifstream;
 using std::ios;
 
@@ -28,7 +25,4 @@ struct RamDataFlags{
 };
 
 RamDataFlags *ram_flagtracker = NULL;
-
-void getDataFromFile(ifstream *);
-
 #endif /* RAM_H */

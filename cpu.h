@@ -1,27 +1,9 @@
 #ifndef CPU_H
 #define CPU_H
 
-/*
-#include <string>    // C++ string 
-#include <cstring>   // C string 
-#include <iostream>  // cout, endl
-#include <unistd.h>  // POSIX operating system calls
-*/
-
-#include <stdio.h>
-#include <cstdlib>
-#include <unistd.h>
-#include <string.h>
-#include <iostream>
-#include <string>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <ctype.h>
-
-using std::cout;
-using std::endl;
-using std::string;
+#include <unistd.h> // For POSIX operating system calls
+#include <ctime>    // For srand() and time()
+#include <cstdlib>  // For exit() and other utility functions
 
 // Create registers in a struct
 struct Registers {
